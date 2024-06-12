@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: production
+
+  mariadb-primary:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+    ports:
+      - "3306:3306"
+    networks:
+      - mariadb-cluster
+
+  mariadb-secondary:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+    ports:
+      - "3307:3306"
+    networks:
+      - mariadb-cluster
+
+  keycloak:
+    image: jboss/keycloak:latest
+    environment:
+      DB_VENDOR: mariadb
+      DB_ADDR: mariadb-primary
+      DB_DATABASE: mydb
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+    ports:
+      - "8081:8080"
+    depends_on:
+      - mariadb-primary
+
+networks:
+  mariadb-cluster:
+    driver: bridge
